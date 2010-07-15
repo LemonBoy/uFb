@@ -1,14 +1,19 @@
 /*
- * uFb 0.1
+ * uFb 0.2
  * The Lemon Man (C) 2010
  * A simple framebuffer-based console.
  * Using "msx" font stolen by PSPSDK :D
  * Contacts:
  * #HACKERCHANNEL @ freenode
  */
+ 
+#ifndef UFB_H
+#define UFB_H
 
 #include "font.h"
 #include <stdarg.h>
+
+#define uFB_VERSION "0.2"
 
 typedef struct 
 {
@@ -17,12 +22,12 @@ typedef struct
 	void (*devFlip) (); /* Callback to the flipping function */
 	unsigned int width, height; /* Framebuffer size */
 	unsigned int conX, conY; /* Console coords */
-} __attribute__((packed)) _uFbDev;
+} _uFbDev;
 
 static _uFbDev dev;
 
-int uFbInit (unsigned int width, unsigned int height, 
-	int (*devInit) (unsigned int width, unsigned int height),
+static int uFbInit (unsigned int width, unsigned int height, 
+	int  (*devInit) (unsigned int width, unsigned int height),
 	void (*devDraw) (unsigned int x, unsigned int y, unsigned int pixel),
 	void (*devFlip) ()
 )
@@ -42,10 +47,25 @@ int uFbInit (unsigned int width, unsigned int height,
 	return dev.devInit(width, height);
 }
 
-void uFbDrawEnd ()
+static void uFbDrawEnd ()
 {
 	if (dev.devFlip)
 		dev.devFlip();
+}
+
+inline void _scrClr ()
+{
+	int row, col;
+	
+	for (row=0;row<dev.height;row++)
+		for (col=0;col<dev.width;col++)
+			dev.devDraw(col, row, 0x00000000);
+}
+
+void _setTermCoords (unsigned int x, unsigned int y)
+{
+	dev.conX = x;
+	dev.conY = y;
 }
 
 inline void _pChar (unsigned char c)
@@ -93,7 +113,7 @@ void _pStr (char *str)
 		_pChar(*str++);
 }
 
-void _my_itoa(int n, char *s) 
+inline void _my_itoa(int n, char *s) 
 {
 	char i;
 	int n1;
@@ -129,18 +149,74 @@ void _my_itoa(int n, char *s)
 	*s++ = 0;
 }
 
-void fprint(const char *fmt, ...)
+
+#define isDigit(c) (c >= '0' && c <= '9')
+
+char *parseBracket (char *str)
 {
-	va_list argp;
+	char *p = str;
+	int args[4], argc = 0;
 	
-	const char *p;
+	do {
+		if (*p == ';')
+			*p++;
+			
+		args[argc] = 0;
+			
+		while (isDigit(*p))
+		{
+			args[argc] = args[argc] * 10 + (*p - '0');
+			*p++;
+		}
+		
+		if (argc > 4)
+			return p;
+			
+		argc++;
+	} while(*p == ';');
 	
-	char *s; int i; char tmp[0x10];
+	if (!*p)
+		return p;
+		
+	switch (*p)
+	{
+		case 'H':
+			if (argc != 2)
+				return p;
+			_setTermCoords(args[0], args[1]);
+			break;
+		case 'J':
+			_scrClr();
+			_setTermCoords(0,0);
+			break;
+	}
+	
+	*p++;
+	
+	return p;
+}
+
+void fprint(char *fmt, ...)
+{
+	va_list argp;	
+	char *s, *p, t; int i; char tmp[0x10];
 	
 	va_start(argp, fmt);
 
 	for(p = fmt; *p != '\0'; p++)
 	{
+		if(*p == 0x1b)
+		{
+			if (*++p == '[')
+			{
+				*p++;
+				p = parseBracket(p);
+			}
+		}
+		
+		if (!*p)
+			break;
+		
 		if(*p != '%')
 		{
 			_pChar(*p);
@@ -153,13 +229,20 @@ void fprint(const char *fmt, ...)
 				s = va_arg(argp, char *);
 				_pStr(s);
 				break;
+			case 'c':
+				t = va_arg(argp, int);
+				_pChar(t);
+				break;
 			case 'i':
 				i = va_arg(argp, int);
 				_my_itoa(i, tmp);
 				_pStr(tmp);
-				break;				
+				break;
 		}
 	}
 	
 	va_end(argp);
 }
+
+
+#endif

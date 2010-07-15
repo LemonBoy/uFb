@@ -1,9 +1,17 @@
-uFb 0.1
+uFb 0.2
 The Lemon Man (C) 2010
 
 A simple framebuffer-based console, should work on any platform.
 stdarg.h is required for format capability.
 
 Thanks to PSPSDK guys for the "msx" font.
+
+History:
+0.2
+- Added %c support
+- VT escape sequence support
+- Bugfixes
+0.1
+- Initial release
 
 #HACKERCHANNEL productionz!

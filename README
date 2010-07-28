@@ -7,6 +7,10 @@ stdarg.h is required for format capability.
 Thanks to PSPSDK guys for the "msx" font.
 
 History:
+0.3
+- Brand new itoa function
+- %u, %d, %x support added
+- Added J VT escape command
 0.2
 - Added %c support
 - VT escape sequence support

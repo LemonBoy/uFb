@@ -62,6 +62,15 @@ inline void _scrClr ()
 			dev.devDraw(col, row, 0x00000000);
 }
 
+inline void _lineClr ()
+{
+	int row, col;
+	
+	for (row=(dev.conY * 8);row<((dev.conY * 8) + 8);row++)
+		for (col=0;col<dev.width;col++)
+			dev.devDraw(col, row, 0x00000000);	
+}
+
 void _setTermCoords (unsigned int x, unsigned int y)
 {
 	dev.conX = x;
@@ -113,42 +122,79 @@ void _pStr (char *str)
 		_pChar(*str++);
 }
 
-inline void _my_itoa(int n, char *s) 
+inline void _my_itoa_s (int n, char *s) 
 {
-	char i;
-	int n1;
+	char tStr[0x10];
+	char *p = tStr;
+	int sign = 0, len = 0;
 	
-	if (n<0) 
+	if (n < 0)
 	{
 		n = -n;
-		*s++ = '-';
+		sign = 1;
 	}
 	
-	do
+	do {
+		*p++ = n % 10 + '0';
+		len++;
+	} while((n /= 10) > 0);
+	
+	if (sign)
 	{
-		n1=n;
-		i=0;
-		while (1) 
-		{
-			if (n1<=9)   
-			{
-				*s++ = n1+'0';
-				break;
-			}
-			n1=n1/10;
-			i++;
-		}
-		while (i)
-		{
-			i--;
-			n1 = n1*10;
-		}
-		n -= n1;
-	} while (n);
+		*p++ = '-';
+		len++;
+	}
+	
+	while (len--)
+	{
+		*s++ = *--p;
+	}
+	
+	*s = '\0';
+}
+
+inline void _my_itoa_us (unsigned int n, char *s) 
+{
+	char tStr[0x10];
+	char *p = tStr;
+	int sign = 0, len = 0;
+	
+	if (n < 0)
+	{
+		n = -n;
+		sign = 1;
+	}
+	
+	do {
+		*p++ = n % 10 + '0';
+		len++;
+	} while((n /= 10) > 0);
+	
+	if (sign)
+	{
+		*p++ = '-';
+		len++;
+	}
+	
+	while (len--)
+	{
+		*s++ = *--p;
+	}
+	
+	*s = '\0';
+}
+
+inline void _my_hex_itoa (unsigned int n, char *s, char fChr)
+{
+	int bNibble = 28;
+	
+	do 
+	{
+		*s++ = ((fChr == 'X') ? "0123456789ABCDEF" : "0123456789abcdef")[(n >> bNibble) & 0xF];
+	} while (bNibble -= 4);
 	
 	*s++ = 0;
 }
-
 
 #define isDigit(c) (c >= '0' && c <= '9')
 
@@ -189,6 +235,14 @@ char *parseBracket (char *str)
 			_scrClr();
 			_setTermCoords(0,0);
 			break;
+		case 'K':
+			if (argc != 1 && args[0] != 2)
+			{
+				_pStr("BAILING\n");
+				return p;
+			}
+			_lineClr();
+			break;
 	}
 	
 	*p++;
@@ -199,7 +253,7 @@ char *parseBracket (char *str)
 void fprint(char *fmt, ...)
 {
 	va_list argp;	
-	char *s, *p, t; int i; char tmp[0x10];
+	char *s, *p, t; int i; unsigned int ui; char tmp[0x10];
 	
 	va_start(argp, fmt);
 
@@ -233,16 +287,31 @@ void fprint(char *fmt, ...)
 				t = va_arg(argp, int);
 				_pChar(t);
 				break;
+			case 'x':
+			case 'X':
+				ui = va_arg(argp, unsigned int);
+				tmp[0] = '0'; tmp[1] = 'x';
+				_my_hex_itoa(ui, &tmp[2], *p);
+				_pStr(tmp);
+				break;
+			case 'u':
+				ui = va_arg(argp, unsigned int);
+				_my_itoa_us(ui, tmp);
+				_pStr(tmp);
+				break;				
+			case 'd':
 			case 'i':
 				i = va_arg(argp, int);
-				_my_itoa(i, tmp);
+				_my_itoa_s(i, tmp);
 				_pStr(tmp);
+				break;
+			case '%':
+				_pChar(*p);
 				break;
 		}
 	}
 	
 	va_end(argp);
 }
-
 
 #endif

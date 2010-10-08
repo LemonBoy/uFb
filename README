@@ -1,4 +1,4 @@
-uFb 0.2
+uFb 0.3b
 The Lemon Man (C) 2010
 
 A simple framebuffer-based console, should work on any platform.
@@ -7,6 +7,8 @@ stdarg.h is required for format capability.
 Thanks to PSPSDK guys for the "msx" font.
 
 History:
+0.3b
+- Various bugfixes
 0.3
 - Brand new itoa function
 - %u, %d, %x support added

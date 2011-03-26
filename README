@@ -1,12 +1,21 @@
-uFb 0.3b
-The Lemon Man (C) 2010
+uFb 0.4
+The Lemon Man (C) 2010-2011
 
-A simple framebuffer-based console, should work on any platform.
-stdarg.h is required for format capability.
+A simple framebuffer-based console aiming for easyness and portability.
+No format nor VT escape sequences are supported anymore from 0.4 as
+were implemented horribly and werent really needed (printing an integer
+is easy as writing 2-3 lines of code).
 
-Thanks to PSPSDK guys for the "msx" font.
+See supplied fonts to see how to use custom fonts.
+Font size must be less or equal to 8 (both width and height), fonts
+covering nonstandard (0-0xFF) ranges are supported too.
+
+The 8x8 font in here is "msx" from PSPSDK.
+The 6x8 font in here is "???" from a Nokia Manual.
 
 History:
+0.4b
+- Rewritten from scratch, just minimal stuff in here kthx.
 0.3b
 - Various bugfixes
 0.3
@@ -20,4 +29,4 @@ History:
 0.1
 - Initial release
 
-#HACKERCHANNEL productionz!
+#HACKERCHANNEL docet.
